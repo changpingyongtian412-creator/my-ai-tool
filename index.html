@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会社概要AIジェネレーター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; }
+        .prose h2 { font-size: 1.3rem; font-weight: 700; color: #0f172a; margin-top: 1.5rem; margin-bottom: 0.75rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.3rem; }
+        .prose h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 1.2rem; margin-bottom: 0.5rem; }
+        .prose p { margin-bottom: 0.8rem; line-height: 1.8; color: #334155; font-size: 0.95rem; }
+        .prose ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.8rem; }
+        .prose li { margin-bottom: 0.3rem; color: #334155; font-size: 0.95rem; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <span class="font-bold text-lg text-slate-900">会社概要AIジェネレーター</span>
+            </div>
+            <button onclick="loadSampleData()" class="text-xs sm:text-sm text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 font-medium px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+                <i data-lucide="file-input" class="w-4 h-4"></i> サンプル入力
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            
+            <!-- 左側：入力フォーム -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                    <h2 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i> 会社情報の入力
+                    </h2>
+                </div>
+
+                <form onsubmit="generateProfile(event)" class="p-6 space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">会社名 / 屋号 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="companyName" required placeholder="例：株式会社テックソリューションズ" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">事業内容・サービス <span class="text-rose-500">*</span></label>
+                        <textarea id="business" required rows="2" placeholder="例：Webアプリの開発・運用" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">所在地 / 拠点 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="location" required placeholder="例：東京都渋谷区..." class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">会社の特徴・強み・想い <span class="text-rose-500">*</span></label>
+                        <textarea id="strengths" required rows="3" placeholder="例：AIを活用した迅速な対応。創業10年の信頼。" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">文章のトーン</label>
+                            <select id="tone" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+                                <option value="信頼感のあるフォーマルなビジネス文書">信頼感・フォーマル</option>
+                                <option value="親しみやすく丁寧で温かみのある文章">親しみやすい・丁寧</option>
+                                <option value="先進的で情熱的なスタートアップ調">先進的・スタートアップ風</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">構成</label>
+                            <select id="formatType" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+                                <option value="Webサイト用（フル構成）">Webサイト用（フル）</option>
+                                <option value="パンフレット用コンパクト構成">パンフレット用</option>
+                                <option value="SNS・要約用ショートテキスト">ショート（要約）</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow transition flex items-center justify-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <span id="btnText">AIで会社概要を生成する</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 右側：結果表示 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px] flex flex-col sticky top-20">
+                <div class="border-b border-slate-100 bg-slate-50 px-6 py-4 flex items-center justify-between">
+                    <h2 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="bot" class="w-5 h-5 text-blue-600"></i> AI生成結果
+                    </h2>
+                    <span id="statusBadge" class="text-xs px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-500">未生成</span>
+                </div>
+
+                <div class="p-6 flex-1 flex flex-col justify-between">
+                    <div id="placeholderState" class="flex-1 flex flex-col items-center justify-center text-center py-20 text-slate-400">
+                        <i data-lucide="sparkles" class="w-12 h-12 mb-3 text-slate-300"></i>
+                        <p class="font-semibold text-slate-600 text-sm">必要事項を入力して「生成する」を押してください</p>
+                    </div>
+
+                    <div id="loadingState" class="hidden flex-1 flex flex-col items-center justify-center text-center py-20">
+                        <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p class="font-bold text-slate-700">AIが文章を生成中…</p>
+                    </div>
+
+                    <div id="errorState" class="hidden flex-1 flex flex-col items-center justify-center text-center py-10">
+                        <p class="font-bold text-rose-600 mb-1">エラーが発生しました</p>
+                        <p id="errorMessage" class="text-xs text-slate-500 max-w-sm"></p>
+                    </div>
+
+                    <div id="resultState" class="hidden flex-1 flex flex-col justify-between">
+                        <div id="previewArea" class="prose max-w-none flex-1 overflow-y-auto max-h-[450px] pr-2"></div>
+                        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-end">
+                            <button onclick="copyText()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition flex items-center gap-2">
+                                <i data-lucide="copy" class="w-4 h-4"></i> <span id="copyBtnText">コピーする</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        function loadSampleData() {
+            document.getElementById('companyName').value = '株式会社ネクストイノベーション';
+            document.getElementById('business').value = 'クラウド型業務効率化ツールの開発、DXコンサルティング';
+            document.getElementById('location').value = '東京都千代田区大手町1-2-3';
+            document.getElementById('strengths').value = '導入実績1,000社以上。直感的なデザインと専任スタッフによるサポート体制。';
+        }
+
+        async function generateProfile(e) {
+            e.preventDefault();
+
+            document.getElementById('placeholderState').classList.add('hidden');
+            document.getElementById('resultState').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+
+            try {
+                // 🔒 自分のサーバー（/api/generate）へ送信する（APIキーは画面から一切見えない）
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        companyName: document.getElementById('companyName').value,
+                        business: document.getElementById('business').value,
+                        location: document.getElementById('location').value,
+                        strengths: document.getElementById('strengths').value,
+                        tone: document.getElementById('tone').value,
+                        formatType: document.getElementById('formatType').value,
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || '通信エラーが発生しました。');
+
+                document.getElementById('previewArea').innerHTML = marked.parse(data.text);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('resultState').classList.remove('hidden');
+                document.getElementById('statusBadge').innerText = '完了';
+                document.getElementById('statusBadge').className = 'text-xs px-2.5 py-1 rounded-full font-medium bg-emerald-100 text-emerald-700';
+
+            } catch (error) {
+                document.getElementById('errorMessage').innerText = error.message;
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function copyText() {
+            const text = document.getElementById('previewArea').innerText;
+            navigator.clipboard.writeText(text);
+            document.getElementById('copyBtnText').innerText = 'コピー完了！';
+            setTimeout(() => { document.getElementById('copyBtnText').innerText = 'コピーする'; }, 2000);
+        }
+    </script>
+</body>
+</html>
