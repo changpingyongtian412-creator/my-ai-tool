@@ -152,7 +152,6 @@
             btn.disabled = true;
 
             try {
-                // 🔒 自分のサーバー（/api/generate）へ送信する（APIキーは画面から一切見えない）
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -170,7 +169,9 @@
 
                 if (!response.ok) throw new Error(data.error || '通信エラーが発生しました。');
 
-                document.getElementById('previewArea').innerHTML = marked.parse(data.text);
+                const resultText = data.text || 'テキストが取得できませんでした。';
+                document.getElementById('previewArea').innerHTML = marked.parse(resultText);
+                
                 document.getElementById('loadingState').classList.add('hidden');
                 document.getElementById('resultState').classList.remove('hidden');
                 document.getElementById('statusBadge').innerText = '完了';
